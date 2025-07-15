@@ -1,0 +1,14 @@
+[
+  {
+    "id": "md412oh2qe85uyjujb",
+    "username": "alice",
+    "isOnline": true,
+    "createdAt": "2025-07-15T04:24:09.830Z"
+  },
+  {
+    "id": "md412ohfomcwuob9vhe",
+    "username": "bob",
+    "isOnline": true,
+    "createdAt": "2025-07-15T04:24:09.843Z"
+  }
+]

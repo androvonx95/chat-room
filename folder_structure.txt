@@ -1,0 +1,18 @@
+src/
+├── controllers/
+│   ├── userController.js
+│   ├── messageController.js
+│   └── roomController.js
+├── routes/
+│   ├── userRoutes.js
+│   ├── messageRoutes.js
+│   └── roomRoutes.js
+├── utils/
+│   ├── storage.js
+│   └── helpers.js
+├── socket/
+│   └── socketHandlers.js
+└── data/
+    ├── users.json
+    ├── messages.json
+    └── rooms.json
