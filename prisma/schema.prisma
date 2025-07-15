@@ -3,46 +3,81 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql" // or "mysql", "sqlite", etc.
+  url      = env("DATABASE_URL")
 }
 
 model User {
   id        String   @id @default(cuid())
   username  String   @unique
-  email     String   @unique
-  password  String
   isOnline  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  rooms            Room[]    @relation("RoomMembers")
+  // Relations
+  sentMessages     Message[]      @relation("MessageSender")
+  receivedMessages Message[]      @relation("MessageReceiver")
+  roomMemberships  RoomMember[]
+  createdRooms     Room[]         @relation("RoomCreator")
+
+  @@map("users")
 }
 
 model Room {
   id        String   @id @default(cuid())
   name      String
-  isPrivate Boolean  @default(false)
+  creatorId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members  User[]    @relation("RoomMembers")
+  // Relations
+  creator  User         @relation("RoomCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  members  RoomMember[]
   messages Message[]
+
+  @@map("rooms")
+}
+
+model RoomMember {
+  id       String   @id @default(cuid())
+  userId   String
+  roomId   String
+  joinedAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roomId])
+  @@map("room_members")
 }
 
 model Message {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   content   String
-  timestamp DateTime @default(now())
+  type      MessageType
+  senderId  String
+  receiverId String?    // null for room messages
+  roomId    String?     // null for direct messages
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
-  senderId String
-  sender   User   @relation("SentMessages", fields: [senderId], references: [id])
+  // Relations
+  sender   User  @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User? @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  room     Room? @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
-  receiverId String?
-  receiver   User?   @relation("ReceivedMessages", fields: [receiverId], references: [id])
-
-  roomId String?
-  room   Room?   @relation(fields: [roomId], references: [id])
+  @@map("messages")
 }
+
+enum MessageType {
+  DIRECT
+  ROOM
+}
+
+// Optional: For better performance, you might want to add indexes
+// @@index([senderId])
+// @@index([receiverId])
+// @@index([roomId])
+// @@index([createdAt])
+// @@index([type])
